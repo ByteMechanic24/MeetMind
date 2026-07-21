@@ -1,106 +1,212 @@
-# MeetMind
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/FastAPI-0.111+-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" />
+  <img src="https://img.shields.io/badge/LangChain-LCEL-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white" />
+</p>
 
-AI meeting/video assistant: paste a YouTube URL or local file, get a transcript,
-title, summary, action items, key decisions, open questions — then chat with
-the meeting via RAG.
-
-This repo now has **two frontends on one backend**:
-
-```
-meetmind-project/
-├── core/                  ← your existing modules (not included here — copy yours in)
-│   ├── transcriber.py
-│   ├── summarizer.py
-│   ├── extractor.py
-│   └── rag_engine.py
-├── utils/
-│   └── audio_processor.py
-├── main.py                 CLI entry point (unchanged)
-├── app.py                  Streamlit UI (unchanged, still works standalone)
-├── api.py                  NEW — FastAPI wrapper around the same pipeline
-├── test.py
-├── Requirements.txt         Python deps (now includes fastapi + uvicorn)
-├── .gitignore
-└── frontend/                NEW — React (Vite) UI, calls api.py over HTTP
-    ├── package.json
-    ├── vite.config.js
-    ├── index.html
-    └── src/
-        ├── main.jsx
-        └── MeetMind.jsx      the "Playful Geometric" UI, wired to /api/*
-```
-
-`core/` and `utils/` aren't included in this bundle since you already have
-them in your project — drop `api.py`, the updated `Requirements.txt`, and the
-`frontend/` folder into your existing repo root alongside them.
+<h1 align="center">🧠 MeetMind</h1>
+<p align="center">
+  <strong>Your meetings, remembered.</strong><br/>
+  <em>AI-powered meeting & video assistant — transcribe, summarize, extract insights, and chat with your recordings.</em>
+</p>
 
 ---
 
-## Running it (two servers, one terminal each)
+## ✨ What It Does
 
-### 1. Backend — FastAPI
+Paste a **YouTube URL** or provide a **local audio/video file**, and MeetMind will:
+
+| Feature | Description |
+| :--- | :--- |
+| 🎙️ **Transcription** | Full speech-to-text using OpenAI Whisper (English) or Sarvam AI (Hinglish → English translation) |
+| 🏷️ **Auto Title** | Generates a concise, professional meeting title |
+| 📋 **Smart Summary** | Map-reduce summarization via Mistral AI into structured bullet points |
+| ✅ **Action Items** | Extracts tasks with owners and deadlines |
+| 🔑 **Key Decisions** | Identifies notable conclusions and agreements |
+| ❓ **Open Questions** | Surfaces unresolved topics that need follow-up |
+| 💬 **RAG Chat** | Ask natural-language questions about your meeting — answers are grounded in the transcript |
+
+---
+
+## 🏗️ Architecture
+
+```
+                   ┌─────────────────────────────────────────────────────┐
+                   │                   MeetMind Pipeline                 │
+                   └─────────────────────────────────────────────────────┘
+
+  ┌──────────┐     ┌───────────────┐     ┌──────────────┐     ┌──────────────┐
+  │ YouTube  │────▶│    Audio      │────▶│  Transcriber │────▶│  Summarizer  │
+  │ URL /    │     │  Processor    │     │  (Whisper /  │     │  (Mistral    │
+  │ Local    │     │  (yt-dlp +    │     │   Sarvam AI) │     │   Map-Reduce)│
+  │ File     │     │   pydub)      │     │              │     │              │
+  └──────────┘     └───────────────┘     └──────┬───────┘     └──────────────┘
+                                                │
+                          ┌─────────────────────┼─────────────────────┐
+                          ▼                     ▼                     ▼
+                   ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+                   │  Extractor   │     │ Vector Store  │     │  RAG Engine  │
+                   │  (Actions,   │     │  (ChromaDB +  │     │  (LangChain  │
+                   │  Decisions,  │     │  MiniLM-L6)   │     │   LCEL QA)   │
+                   │  Questions)  │     │              │     │              │
+                   └──────────────┘     └──────────────┘     └──────────────┘
+                          │                                          │
+                          └──────────────┐  ┌────────────────────────┘
+                                         ▼  ▼
+                              ┌────────────────────┐
+                              │    User Interface   │
+                              │  (React / Streamlit │
+                              │       / CLI)        │
+                              └────────────────────┘
+```
+
+---
+
+## 📂 Project Structure
+
+```
+meetmind/
+├── core/                        # Core AI pipeline modules
+│   ├── transcriber.py           # Whisper (English) & Sarvam AI (Hinglish) transcription
+│   ├── summarizer.py            # Map-reduce summarization with Mistral AI
+│   ├── extractor.py             # Structured extraction: action items, decisions, questions
+│   ├── vector_store.py          # ChromaDB vector store with sentence-transformer embeddings
+│   └── rag_engine.py            # Conversational RAG chain using LangChain LCEL
+│
+├── utils/
+│   └── audio_processor.py       # YouTube download (yt-dlp), WAV conversion, audio chunking
+│
+├── frontend/                    # React SPA (Vite + Lucide icons)
+│   ├── src/
+│   │   ├── main.jsx             # App entrypoint
+│   │   └── MeetMind.jsx         # Full UI component with API integration
+│   ├── package.json
+│   └── vite.config.js           # Dev proxy → FastAPI backend
+│
+├── main.py                      # CLI entrypoint
+├── app.py                       # Streamlit dashboard
+├── api.py                       # FastAPI REST API (async job processing)
+├── test.py                      # Integration test script
+├── requirements.txt             # Python dependencies
+└── .env                         # API keys (not committed)
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Python 3.10+**
+- **Node.js 18+** (for the React frontend)
+- **FFmpeg** installed and available on your `PATH`
+- API keys configured in `.env`:
+  ```env
+  MISTRAL_API_KEY=your_mistral_api_key
+  SARVAM_API_KEY=your_sarvam_api_key        # Required only for Hinglish
+  ```
+
+### 1️⃣ Install Python Dependencies
 
 ```bash
-pip install -r Requirements.txt --break-system-packages
-# make sure your .env (Mistral API key etc.) is in the project root, same as before
+pip install -r requirements.txt
+```
+
+### 2️⃣ Choose Your Interface
+
+<details>
+<summary><strong>Option A — React Frontend + FastAPI Backend (Recommended)</strong></summary>
+
+**Terminal 1 — Start the backend:**
+```bash
 uvicorn api:app --reload --port 8000
 ```
 
-Sanity check: `curl http://localhost:8000/api/health` → `{"ok": true}`
-
-### 2. Frontend — React (Vite)
-
+**Terminal 2 — Start the frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Open **http://localhost:5173**. The Vite dev server proxies any `/api/*`
-request to `http://localhost:8000`, so the two talk to each other with zero
-extra config — just make sure the backend is running first.
+Open **http://localhost:5173** — the Vite dev server proxies `/api/*` requests to the backend automatically.
+
+</details>
+
+<details>
+<summary><strong>Option B — Streamlit Dashboard</strong></summary>
+
+```bash
+streamlit run app.py
+```
+
+Opens a full-featured dashboard with live pipeline status in the sidebar and an integrated chat interface.
+
+</details>
+
+<details>
+<summary><strong>Option C — Command Line</strong></summary>
+
+```bash
+python main.py
+```
+
+Follow the prompts to enter a YouTube URL or file path, then interact with your meeting via the terminal.
+
+</details>
 
 ---
 
-## How the pieces connect
+## ⚙️ How It Works
 
-```
- React UI (5173)          FastAPI (8000)              your pipeline
- ─────────────────        ─────────────────           ─────────────────
- POST /api/analyze   ───▶  starts a background   ───▶  process_input()
-                           job, returns job_id          transcribe_all()
-                                                          generate_title()
- poll                                                    summarize()
- GET /api/status/:id ───▶  { steps, status }             extract_*()
-                                                          build_rag_chain()
- GET /api/result/:id ───▶  title/summary/etc.
+### Processing Pipeline
 
- POST /api/chat/:id  ───▶  ask_question(chain, q)  ───▶  your RAG chain
-```
+1. **Audio Processing** — Downloads YouTube audio via `yt-dlp` or converts local files to mono 16kHz WAV. Splits long recordings into 10-minute chunks.
 
-Analysis is asynchronous because transcription + embedding are slow: the
-frontend fires `POST /api/analyze`, gets a `job_id` back immediately, then
-polls `GET /api/status/:job_id` every 1.5s. Each of the 6 pipeline steps
-(audio → transcript → title → summary → extract → rag) updates in the
-sidebar as it happens — same steps the Streamlit sidebar showed, just driven
-by the real backend instead of `st.session_state`.
+2. **Transcription** — Routes audio through either:
+   - **Whisper** (local, `small` model) for English
+   - **Sarvam AI** (cloud API, auto-translates Hindi/Hinglish → English)
 
-Job state (and the non-serialisable `rag_chain` object) lives in memory in
-`api.py`. That's fine for local use / a single dev server. If you deploy this
-for real, swap the in-memory `JOBS`/`CHAINS` dicts for Redis (or similar) and
-run the pipeline via a proper task queue (Celery/RQ/arq) instead of
-`BackgroundTasks`.
+3. **Intelligence Extraction** — Uses Mistral AI (`mistral-small-latest`) via LangChain to:
+   - Generate a concise meeting title
+   - Produce a structured bullet-point summary (map-reduce)
+   - Extract action items, key decisions, and open questions
 
-## Still using Streamlit?
+4. **RAG Setup** — Embeds transcript chunks (500 chars, 50 overlap) using `all-MiniLM-L6-v2`, stores them in ChromaDB, and builds an LCEL retrieval-augmented QA chain.
 
-`app.py` is untouched and still works exactly as before — `streamlit run app.py`.
-The React UI is an alternative frontend on the same backend logic, not a
-replacement; run whichever (or both) you like.
+5. **Interactive Chat** — Users can ask natural-language questions; answers are strictly grounded in the transcript context.
 
-## Things I couldn't verify from here
+### API Endpoints
 
-I don't have your `core/`/`utils/` modules, your `.env`, or `ffmpeg`/Whisper
-in this sandbox, so I could confirm the **frontend builds cleanly** (`npm run
-build` succeeds) and the **backend is syntactically valid**, but the full
-loop (YouTube URL → real transcript → real chat answer) needs to be smoke
-tested on your machine.
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/health` | Health check |
+| `POST` | `/api/analyze` | Start analysis job (returns `job_id`) |
+| `GET` | `/api/status/{job_id}` | Poll pipeline step progress |
+| `GET` | `/api/result/{job_id}` | Fetch completed results |
+| `POST` | `/api/chat/{job_id}` | Ask a question about the transcript |
+| `DELETE` | `/api/session/{job_id}` | Free memory for a completed job |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **Speech-to-Text** | OpenAI Whisper, Sarvam AI |
+| **LLM** | Mistral AI (`mistral-small-latest`) |
+| **Orchestration** | LangChain (LCEL) |
+| **Embeddings** | Sentence-Transformers (`all-MiniLM-L6-v2`) |
+| **Vector Store** | ChromaDB |
+| **Backend API** | FastAPI + Uvicorn |
+| **Frontend** | React 18 + Vite + Lucide Icons |
+| **Dashboard** | Streamlit |
+| **Audio** | yt-dlp, pydub, FFmpeg |
+
+---
+
+## 📝 License
+
+This project is for educational and personal use.
