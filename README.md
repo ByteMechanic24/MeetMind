@@ -20,7 +20,7 @@ Paste a **YouTube URL** or provide a **local audio/video file**, and MeetMind wi
 
 | Feature | Description |
 | :--- | :--- |
-| 🎙️ **Transcription** | Full speech-to-text using OpenAI Whisper (English) or Sarvam AI (Hinglish → English translation) |
+| 🎙️ **Transcription** | Dual-mode speech-to-text: Groq Cloud API (`whisper-large-v3-turbo`) for sub-second production latency, fallback to local OpenAI Whisper (`small` model), or Sarvam AI (Hinglish → English translation) |
 | 🏷️ **Auto Title** | Generates a concise, professional meeting title |
 | 📋 **Smart Summary** | Map-reduce summarization via Mistral AI into structured bullet points |
 | ✅ **Action Items** | Extracts tasks with owners and deadlines |
@@ -105,7 +105,8 @@ meetmind/
 - API keys configured in `.env`:
   ```env
   MISTRAL_API_KEY=your_mistral_api_key
-  SARVAM_API_KEY=your_sarvam_api_key        # Required only for Hinglish
+  GROQ_API_KEY=your_groq_api_key          # Fast Whisper API (whisper-large-v3-turbo)
+  SARVAM_API_KEY=your_sarvam_api_key      # Required only for Hinglish
   ```
 
 ### 1️⃣ Install Python Dependencies
