@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: meetmind-backend
+    env: docker
+    plan: starter
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
+        sync: false
+    buildCommand: null
+    startCommand: null
+    healthCheckPath: /api/health

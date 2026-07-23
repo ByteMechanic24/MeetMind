@@ -32,10 +32,12 @@ Design notes:
 import uuid
 import traceback
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -221,6 +223,14 @@ def end_session(job_id: str):
     JOBS.pop(job_id, None)
     CHAINS.pop(job_id, None)
     return {"deleted": True}
+
+
+# Serve the built React frontend when dist exists.
+frontend_dist = Path(__file__).resolve().parent / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+else:
+    print("Warning: frontend/dist not found. Build the React app before running the container.")
 
 
 if __name__ == "__main__":
