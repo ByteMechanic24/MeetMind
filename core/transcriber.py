@@ -1,4 +1,3 @@
-import whisper
 import os
 import requests
 from pydub import AudioSegment
@@ -77,7 +76,10 @@ def transcribe_chunk_whisper(chunk_path: str) -> str:
             print("  → Using Groq Cloud Whisper API (whisper-large-v3-turbo)...")
             return transcribe_chunk_groq(chunk_path)
         except Exception as e:
-            print(f"  ⚠️ Groq API failed ({e}), falling back to local Whisper model...")
+            import traceback
+            print(f"  ⚠️ Groq API failed: {e}")
+            traceback.print_exc()
+            print("  Falling back to local Whisper model...")
 
     # Fallback to local Whisper
     model = load_model()
